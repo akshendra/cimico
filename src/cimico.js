@@ -3,9 +3,10 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-06-22 02:07:58
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-06-22 17:16:28
+ * @Last Modified time: 2017-06-22 21:55:43
  */
 
+const is = require('is_js');
 const util = require('util');
 const chalk = require('chalk');
 const figures = require('figures');
@@ -69,68 +70,157 @@ class Cimico {
       error: utils.checkEnabled(map, `${label}:error`),
       debug: utils.checkEnabled(map, `${label}:debug`),
     };
-    this.config = Object.assign(
-      {
-        baseDir: null,
-        prettyJSON: true,
-        prettyError: true,
-      },
-      config,
-    );
+    this.config = config;
+    this.current = {};
   }
 
-  internal(fragments, stream, formater, figure) {
-    const { baseDir, prettyJSON, prettyError } = this.config;
-    const cs = callsites()[2];
+  cleanup() {
+    this.current = {};
+  }
 
-    let header = `${chalk.underline(this.label)} ${figure} ${utils.getCallInfo(cs, baseDir)}`;
-    if (
-      fragments.length === 1 &&
-      (typeof fragments[0] === 'string' || typeof fragments[0] === 'number')
-    ) {
-      header += ` :: ${chalk.dim(fragments[0])}\n`;
-      stream.write(formater(header));
-      return;
+  setFlag(flag) {
+    Object.assign(this.current, {
+      [flag]: true,
+    });
+  }
+
+  // eslint-disable-next-line
+  combineStrings(args) {
+    const strings = [];
+    let i = 0;
+    for (i = 0; i < args.length; i += 1) {
+      const arg = args[i];
+      if (is.string(arg) || is.boolean(arg) || is.number(arg)) {
+        strings.push(arg);
+      } else {
+        break;
+      }
     }
-    header += '\n';
-    stream.write(formater(header));
+    return {
+      rest: args.slice(i),
+      combined: strings.join(' '),
+    };
+  }
 
-    const inspectString = ` ${figures.squareSmall} ${chalk.dim('______inspect______')}\n`;
+  // eslint-disable-next-line
+  formatter(args) {
+    const prints = [];
 
-    fragments.forEach((frag) => {
-      if (
-        typeof frag === 'string' ||
-        typeof frag === 'number' ||
-        typeof frag === 'boolean'
-      ) {
+    let formatString = args.shift();
+
+    const re = /%([bud]*(\(.*?\))?)/g;
+    const matches = formatString.match(re);
+    matches.forEach((match, index) => {
+      const compiled = utils.inspectFormat(match);
+      let formater = chalk.white;
+      compiled.formatters.forEach((f) => {
+        switch (f) {
+          case 'd':
+            formater = formater.dim;
+            break;
+          case 'b':
+            formater = formater.bold;
+            break;
+          case 'u':
+            formater = formater.underline;
+            break;
+          default:
+            throw new Error(`Unsupported formatter ${f}`);
+        }
+      });
+
+      let replaceString = '';
+      const value = args[index];
+      if (is.string(value) || is.boolean(value) || is.number(value)) {
+        replaceString = formater(value);
+      } else {
+        replaceString = chalk.dim(`__${index + 1}__`);
+        prints.push(value);
+      }
+      if (compiled.key) {
+        replaceString = `${compiled.key}=${replaceString}`;
+      }
+      formatString = formatString.replace(match, replaceString);
+    });
+
+    return {
+      combined: formatString,
+      rest: prints,
+    };
+  }
+
+  header(figure, cs) {
+    let string = `${chalk.underline(this.label)} ${figure}`;
+    if (this.current.timestamp === true) {
+      string += ` ${utils.getTimeStamp()}`;
+    }
+    if (this.fileName === true) {
+      string += ` ${utils.getCallInfo(cs, this.current.baseDir)}`;
+    }
+
+    return `${string}: `;
+  }
+
+  print(header, combined, rest, stream, formater) {
+    stream.write(formater(`${header} ${combined}\n`));
+
+    rest.forEach((frag, index) => {
+      if (is.string(frag) || is.boolean(frag) || is.number(frag)) {
         stream.write(chalk.white(` ${figures.squareSmall}  ${frag}\n`));
+        this.cleanup();
         return;
       }
 
-      if (frag instanceof Error) {
-        if (prettyError === true) {
-          stream.write(` ${figures.squareSmall}${pe.render(frag)}`);
+      let name = '';
+      if (this.current.format === true) {
+        name = chalk.dim(`__${index + 1}__`);
+      } else {
+        name = chalk.dim('__inspect__');
+      }
+      const inspectString = ` ${figures.squareSmall} ${name}\n`;
+
+      if (is.error(frag)) {
+        if (this.current.pretty === true) {
+          stream.write(
+            ` ${figures.squareSmall}${pe.render(frag, false, this.current.color)}`,
+          );
         } else {
           stream.write(` ${figures.squareSmall}  ${frag.stack}\n`);
         }
+        this.cleanup();
         return;
       }
 
-      if (typeof frag === 'object' || Array.isArray(frag)) {
-        if (prettyJSON === true) {
-          stream.write(inspectString);
-          stream.write(`${pj.render(frag, {}, 2)}\n`);
-        } else {
-          stream.write(inspectString);
-          const formatted = util
-            .inspect(frag, false, 3, true)
-            .split('\n')
-            .map(s => `  ${s}`)
-            .join('\n');
-          stream.write(`${formatted}\n`);
-        }
+      if (this.current.pretty === true) {
+        stream.write(inspectString);
+        stream.write(`${pj.render(frag, {}, 2)}\n`);
+      } else {
+        stream.write(inspectString);
+        const formatted = util
+          .inspect(frag, false, 2, this.current.color)
+          .split('\n')
+          .map(s => `  ${s}`)
+          .join('\n');
+        stream.write(`${formatted}\n`);
       }
     });
+  }
+
+  internal(fragments, stream, formater, figure) {
+    this.current = Object.assign({}, this.config, this.current);
+    const { format, baseDir } = this.current;
+    const cs = callsites()[2];
+
+    const header = `${chalk.underline(this.label)} ${figure} ${utils.getCallInfo(cs, baseDir)}`;
+
+    if (format === false) {
+      const { combined, rest } = this.combineStrings(fragments);
+      this.print(header, combined, rest, stream, formater, figure);
+    } else {
+      const { combined, rest } = this.formatter(fragments);
+      this.print(header, combined, rest, stream, formater, figure);
+    }
+    this.cleanup();
   }
 
   log(...args) {
@@ -155,36 +245,6 @@ class Cimico {
     if (this.enabled.debug) {
       this.internal(args, process.stderr, chalk.white, figures.bullet);
     }
-  }
-
-  // eslint-disable-next-line
-  format(...args) {
-    let formatString = args.shift();
-    const re = /%([bu]*(\(.*?\))?)/g;
-    const matches = formatString.match(re);
-    matches.forEach((match, index) => {
-      const compiled = utils.inspectFormat(match);
-      let formater = chalk;
-      compiled.formatters.forEach((f) => {
-        switch (f) {
-          case 'b':
-            formater = formater.bold;
-            break;
-          case 'u':
-            formater = formater.underline;
-            break;
-          default:
-            throw new Error(`Unsupported formatter ${f}`);
-        }
-      });
-
-      let replaceString = formater(args[index]);
-      if (compiled.key) {
-        replaceString = `${compiled.key}=${replaceString}`;
-      }
-      formatString = formatString.replace(match, replaceString);
-    });
-    process.stdout.write(`${formatString}\n`);
   }
 }
 
