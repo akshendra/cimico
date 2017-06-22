@@ -28,3 +28,12 @@ logger.debug({
     logger,
   },
 });
+
+logger.format(
+  'This is bold=%b and this is underline=%u and this is both %bu',
+  'bold',
+  'underline',
+  'everything',
+);
+
+logger.format('This is %b(bold) and this is %u(under)', 'bold', 'underline');

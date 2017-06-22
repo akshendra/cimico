@@ -3,7 +3,7 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-06-22 01:31:04
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-06-22 02:52:20
+ * @Last Modified time: 2017-06-22 17:13:12
  */
 
 const callsites = require('callsites');
@@ -74,5 +74,34 @@ describe('getCallInfo', () => {
     const cs = eg.foo()[0];
     const string = utils.getCallInfo(cs, __dirname);
     expect(string).to.equal('utils.spec.js[bar]:24');
+  });
+});
+
+describe('inspectFormat', () => {
+  it('should be able to find key', () => {
+    const string = '%bu(name)';
+    const data = utils.inspectFormat(string);
+    expect(data).to.deep.equal({
+      key: 'name',
+      formatters: ['b', 'u'],
+    });
+  });
+
+  it('should not find key when there is not key', () => {
+    const string = '%bu';
+    const data = utils.inspectFormat(string);
+    expect(data).to.deep.equal({
+      key: null,
+      formatters: ['b', 'u'],
+    });
+  });
+
+  it('should not find the formaters where there are no formatters', () => {
+    const string = '%(name)';
+    const data = utils.inspectFormat(string);
+    expect(data).to.deep.equal({
+      key: 'name',
+      formatters: [],
+    });
   });
 });

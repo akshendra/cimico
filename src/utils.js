@@ -2,7 +2,7 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-06-22 01:24:49
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-06-22 05:15:53
+ * @Last Modified time: 2017-06-22 17:12:05
  */
 
 const path = require('path');
@@ -100,5 +100,20 @@ module.exports = {
    */
   getTimeStamp() {
     return new Date().toISOString();
+  },
+
+  /**
+   * Inspect format string
+   *
+   * @return {object}
+   */
+  inspectFormat(string) {
+    const re = /%([bu]*)(\((.*)\))?/;
+    const match = string.match(re);
+
+    return {
+      formatters: match[1] ? match[1].split('') : [],
+      key: match[3] ? match[3] : null,
+    };
   },
 };
