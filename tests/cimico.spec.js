@@ -26,7 +26,7 @@ logger.f.l(
   'underline',
   'everything',
 );
-logger.f.s(
+logger.f.c.s(
   '%(object) and %(array)',
   {
     var: 'data',

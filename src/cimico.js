@@ -3,7 +3,7 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-06-22 02:07:58
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-06-22 21:55:43
+ * @Last Modified time: 2017-06-22 22:02:32
  */
 
 const is = require('is_js');
@@ -162,7 +162,11 @@ class Cimico {
   }
 
   print(header, combined, rest, stream, formater) {
-    stream.write(formater(`${header} ${combined}\n`));
+    if (this.current.color === true) {
+      stream.write(formater(`${header} ${combined}\n`));
+    } else {
+      stream.write(`${header} ${combined}\n`);
+    }
 
     rest.forEach((frag, index) => {
       if (is.string(frag) || is.boolean(frag) || is.number(frag)) {
@@ -193,7 +197,9 @@ class Cimico {
 
       if (this.current.pretty === true) {
         stream.write(inspectString);
-        stream.write(`${pj.render(frag, {}, 2)}\n`);
+        stream.write(
+          `${pj.render(frag, { noColor: !this.current.color }, 2)}\n`,
+        );
       } else {
         stream.write(inspectString);
         const formatted = util
