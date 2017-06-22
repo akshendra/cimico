@@ -3,7 +3,7 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-06-22 02:07:58
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-06-22 22:19:31
+ * @Last Modified time: 2017-06-22 22:21:39
  */
 
 const is = require('is_js');
@@ -233,7 +233,7 @@ class Cimico {
 
   log(...args) {
     if (this.enabled.log) {
-      this.internal(args, process.stdout, chalk.blue, figures.pointerSmall);
+      this.internal(args, process.stdout, chalk.grey, figures.pointerSmall);
     }
   }
 
