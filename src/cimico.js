@@ -3,7 +3,7 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-06-22 02:07:58
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-06-22 22:02:32
+ * @Last Modified time: 2017-06-22 22:19:31
  */
 
 const is = require('is_js');
@@ -149,16 +149,16 @@ class Cimico {
     };
   }
 
-  header(figure, cs) {
+  getHeader(figure, cs) {
     let string = `${chalk.underline(this.label)} ${figure}`;
     if (this.current.timestamp === true) {
-      string += ` ${utils.getTimeStamp()}`;
+      string += ` ${chalk.dim.underline(utils.getTimeStamp())}`;
     }
-    if (this.fileName === true) {
-      string += ` ${utils.getCallInfo(cs, this.current.baseDir)}`;
+    if (this.current.filename === true) {
+      string += ` ${chalk.dim.underline(utils.getCallInfo(cs, this.current.baseDir))}`;
     }
 
-    return `${string}: `;
+    return `${string} :`;
   }
 
   print(header, combined, rest, stream, formater) {
@@ -170,7 +170,9 @@ class Cimico {
 
     rest.forEach((frag, index) => {
       if (is.string(frag) || is.boolean(frag) || is.number(frag)) {
-        stream.write(chalk.white(` ${figures.squareSmall}  ${frag}\n`));
+        stream.write(
+          chalk.white(` ${chalk.dim(figures.squareSmall)}  ${frag}\n`),
+        );
         this.cleanup();
         return;
       }
@@ -181,7 +183,7 @@ class Cimico {
       } else {
         name = chalk.dim('__inspect__');
       }
-      const inspectString = ` ${figures.squareSmall} ${name}\n`;
+      const inspectString = ` ${chalk.dim(figures.squareSmall)} ${name}\n`;
 
       if (is.error(frag)) {
         if (this.current.pretty === true) {
@@ -214,10 +216,10 @@ class Cimico {
 
   internal(fragments, stream, formater, figure) {
     this.current = Object.assign({}, this.config, this.current);
-    const { format, baseDir } = this.current;
+    const { format } = this.current;
     const cs = callsites()[2];
 
-    const header = `${chalk.underline(this.label)} ${figure} ${utils.getCallInfo(cs, baseDir)}`;
+    const header = this.getHeader(figure, cs);
 
     if (format === false) {
       const { combined, rest } = this.combineStrings(fragments);
