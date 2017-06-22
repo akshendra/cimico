@@ -3,7 +3,7 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-06-22 01:31:04
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-06-22 17:13:12
+ * @Last Modified time: 2017-06-22 22:31:01
  */
 
 const callsites = require('callsites');
@@ -79,11 +79,11 @@ describe('getCallInfo', () => {
 
 describe('inspectFormat', () => {
   it('should be able to find key', () => {
-    const string = '%bu(name)';
+    const string = '%budsi(name)';
     const data = utils.inspectFormat(string);
     expect(data).to.deep.equal({
       key: 'name',
-      formatters: ['b', 'u'],
+      formatters: ['b', 'u', 'd', s],
     });
   });
 

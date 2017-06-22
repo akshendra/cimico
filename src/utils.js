@@ -2,7 +2,7 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-06-22 01:24:49
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-06-22 17:12:05
+ * @Last Modified time: 2017-06-22 22:30:56
  */
 
 const path = require('path');
@@ -108,7 +108,7 @@ module.exports = {
    * @return {object}
    */
   inspectFormat(string) {
-    const re = /%([bu]*)(\((.*)\))?/;
+    const re = /%([budsi]*)(\((.*)\))?/;
     const match = string.match(re);
 
     return {

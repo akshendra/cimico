@@ -3,7 +3,7 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-06-22 02:07:58
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-06-22 22:21:39
+ * @Last Modified time: 2017-06-22 22:46:25
  */
 
 const is = require('is_js');
@@ -108,7 +108,7 @@ class Cimico {
 
     let formatString = args.shift();
 
-    const re = /%([bud]*(\(.*?\))?)/g;
+    const re = /%([dbu]*(\(.*?\))?)/g;
     const matches = formatString.match(re);
     matches.forEach((match, index) => {
       const compiled = utils.inspectFormat(match);
@@ -233,7 +233,7 @@ class Cimico {
 
   log(...args) {
     if (this.enabled.log) {
-      this.internal(args, process.stdout, chalk.grey, figures.pointerSmall);
+      this.internal(args, process.stdout, chalk.blue, figures.pointerSmall);
     }
   }
 
@@ -251,7 +251,7 @@ class Cimico {
 
   debug(...args) {
     if (this.enabled.debug) {
-      this.internal(args, process.stderr, chalk.white, figures.bullet);
+      this.internal(args, process.stderr, chalk.grey, figures.bullet);
     }
   }
 }
