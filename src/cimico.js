@@ -3,7 +3,7 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-06-22 02:07:58
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-06-22 05:29:35
+ * @Last Modified time: 2017-06-22 06:05:43
  */
 
 const util = require('util');
@@ -128,7 +128,16 @@ class Cimico {
     const { baseDir, prettyJSON, prettyError } = this.config;
     const cs = callsites()[2];
 
-    const header = `${chalk.underline(this.label)} ${figure} ${utils.getTimeStamp()} ${utils.getCallInfo(cs, baseDir)}\n`;
+    let header = `${chalk.underline(this.label)} ${figure} ${utils.getCallInfo(cs, baseDir)}`;
+    if (
+      fragments.length === 1 &&
+      (typeof fragments[0] === 'string' || typeof fragments[0] === 'number')
+    ) {
+      header += ` :: ${chalk.dim(fragments[0])}\n`;
+      stream.write(formater(header));
+      return;
+    }
+    header += '\n';
     stream.write(formater(header));
 
     const inspectString = ` ${figures.squareSmall} ${chalk.dim('______inspect______')}\n`;
