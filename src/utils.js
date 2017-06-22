@@ -2,7 +2,7 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-06-22 01:24:49
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-06-22 03:02:39
+ * @Last Modified time: 2017-06-22 05:15:53
  */
 
 const path = require('path');
@@ -55,6 +55,9 @@ module.exports = {
    */
   parseEnv(string) {
     const map = {};
+    if (!string) {
+      return map;
+    }
     const fragments = string.split(',');
     fragments.forEach((frag) => {
       parseEnvR(map, frag.split(':'));

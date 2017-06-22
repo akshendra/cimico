@@ -3,13 +3,15 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-06-22 02:07:58
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-06-22 03:29:23
+ * @Last Modified time: 2017-06-22 05:29:35
  */
 
+const util = require('util');
 const chalk = require('chalk');
 const figures = require('figures');
 const callsites = require('callsites');
 const PrettyError = require('pretty-error');
+const pj = require('prettyjson');
 
 const pe = new PrettyError();
 // pe.withoutColors();
@@ -104,41 +106,91 @@ pe.appendStyle({
 const utils = require('./utils');
 
 class Cimico {
-  constructor(map, label, baseDir = null) {
+  constructor(map, label, config = {}) {
     this.label = label;
     this.enabled = {
       log: utils.checkEnabled(map, `${label}:log`),
       success: utils.checkEnabled(map, `${label}:success`),
       error: utils.checkEnabled(map, `${label}:error`),
       debug: utils.checkEnabled(map, `${label}:debug`),
-      pretty: utils.checkEnabled(map, `${label}:pretty`),
-      bordered: utils.checkEnabled(map, `${label}:pretty`),
     };
-    this.baseDir = baseDir;
+    this.config = Object.assign(
+      {
+        baseDir: null,
+        prettyJSON: true,
+        prettyError: true,
+      },
+      config,
+    );
   }
 
-  internal(fragments, stream, cs, formater, figure) {
-    const header = `${figure} ${utils.getCallInfo(cs, this.baseDir)}\n`;
+  internal(fragments, stream, formater, figure) {
+    const { baseDir, prettyJSON, prettyError } = this.config;
+    const cs = callsites()[2];
+
+    const header = `${chalk.underline(this.label)} ${figure} ${utils.getTimeStamp()} ${utils.getCallInfo(cs, baseDir)}\n`;
     stream.write(formater(header));
+
+    const inspectString = ` ${figures.squareSmall} ${chalk.dim('______inspect______')}\n`;
+
     fragments.forEach((frag) => {
-      if (typeof frag === 'string') {
-        stream.write(chalk.white(`  ${frag}\n`));
+      if (
+        typeof frag === 'string' ||
+        typeof frag === 'number' ||
+        typeof frag === 'boolean'
+      ) {
+        stream.write(chalk.white(` ${figures.squareSmall}  ${frag}\n`));
         return;
       }
+
       if (frag instanceof Error) {
-        stream.write(pe.render(frag));
+        if (prettyError === true) {
+          stream.write(` ${figures.squareSmall}${pe.render(frag)}`);
+        } else {
+          stream.write(` ${figures.squareSmall}  ${frag.stack}\n`);
+        }
+        return;
+      }
+
+      if (typeof frag === 'object' || Array.isArray(frag)) {
+        if (prettyJSON === true) {
+          stream.write(inspectString);
+          stream.write(`${pj.render(frag, {}, 2)}\n`);
+        } else {
+          stream.write(inspectString);
+          const formatted = util
+            .inspect(frag, false, 3, true)
+            .split('\n')
+            .map(s => `  ${s}`)
+            .join('\n');
+          stream.write(`${formatted}\n`);
+        }
       }
     });
   }
 
   log(...args) {
-    const cs = callsites()[1];
-    this.internal(args, process.stdout, cs, chalk.blue, figures.tick);
+    if (this.enabled.log) {
+      this.internal(args, process.stdout, chalk.blue, figures.pointerSmall);
+    }
+  }
+
+  success(...args) {
+    if (this.enabled.success) {
+      this.internal(args, process.stdout, chalk.green, figures.tick);
+    }
   }
 
   error(...args) {
-    const cs = callsites()[1];
-    this.internal(args, process.stderr, cs, chalk.red.bold, figures.cross);
+    if (this.enabled.error) {
+      this.internal(args, process.stderr, chalk.red.bold, figures.cross);
+    }
+  }
+
+  debug(...args) {
+    if (this.enabled.debug) {
+      this.internal(args, process.stderr, chalk.white, figures.bullet);
+    }
   }
 }
 
