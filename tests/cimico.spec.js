@@ -1,5 +1,6 @@
 const cimico = require('../index');
 
+const defLogger = cimico();
 const logger = cimico('app', {
   baseDir: __dirname,
   pretty: false,
@@ -49,3 +50,5 @@ logger.f.p.ts.fn.e(
   },
   ['what', 'do', 'you', 'mean'],
 );
+
+defLogger.log('This is just too much');

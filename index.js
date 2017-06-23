@@ -3,7 +3,7 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-06-22 05:30:00
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-06-22 22:11:09
+ * @Last Modified time: 2017-06-24 00:56:47
  */
 
 const callsites = require('callsites');
@@ -35,8 +35,43 @@ const defaults = {
   filename: true,
 };
 
+const defLog = new Cimico({}, '', {
+  format: false,
+  color: true,
+  pretty: true,
+  timestamp: false,
+  filename: false,
+});
+
+Object.assign(defLog.enabled, {
+  log: true,
+  success: true,
+  error: true,
+  debug: true,
+});
+
 function cimico(label, conf = {}) {
   const baseDir = callsites()[1].getFileName();
+
+  if (!label) {
+    Object.assign(defLog.config, {
+      baseDir,
+    });
+    return defLog;
+  }
+
+  if (label instanceof Object) {
+    Object.assign(
+      defLog.config,
+      Object.assign(
+        {
+          baseDir,
+        },
+        label,
+      ),
+    );
+    return defLog;
+  }
 
   const logger = new Cimico(
     map,

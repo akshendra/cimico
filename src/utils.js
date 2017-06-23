@@ -2,7 +2,7 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-06-22 01:24:49
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-06-22 22:30:56
+ * @Last Modified time: 2017-06-24 00:45:57
  */
 
 const path = require('path');

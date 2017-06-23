@@ -3,7 +3,7 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-06-22 02:07:58
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-06-22 22:46:25
+ * @Last Modified time: 2017-06-24 00:57:22
  */
 
 const is = require('is_js');
@@ -152,13 +152,13 @@ class Cimico {
   getHeader(figure, cs) {
     let string = `${chalk.underline(this.label)} ${figure}`;
     if (this.current.timestamp === true) {
-      string += ` ${chalk.dim.underline(utils.getTimeStamp())}`;
+      string += ` ${chalk.dim.underline(utils.getTimeStamp())} :`;
     }
     if (this.current.filename === true) {
-      string += ` ${chalk.dim.underline(utils.getCallInfo(cs, this.current.baseDir))}`;
+      string += ` ${chalk.dim.underline(utils.getCallInfo(cs, this.current.baseDir))} :`;
     }
 
-    return `${string} :`;
+    return `${string}`;
   }
 
   print(header, combined, rest, stream, formater) {
