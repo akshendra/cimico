@@ -3,7 +3,7 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-06-22 05:30:00
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-06-24 00:56:47
+ * @Last Modified time: 2017-07-03 23:53:27
  */
 
 const callsites = require('callsites');
@@ -24,7 +24,7 @@ const shortHands = {
   d: 'debug',
   s: 'success',
   fn: 'filename',
-  ts: 'timestamp',
+  ts: 'timestamp'
 };
 
 const defaults = {
@@ -32,7 +32,7 @@ const defaults = {
   color: true,
   pretty: true,
   timestamp: false,
-  filename: true,
+  filename: true
 };
 
 const defLog = new Cimico({}, '', {
@@ -40,51 +40,17 @@ const defLog = new Cimico({}, '', {
   color: true,
   pretty: true,
   timestamp: false,
-  filename: false,
+  filename: false
 });
 
 Object.assign(defLog.enabled, {
   log: true,
   success: true,
   error: true,
-  debug: true,
+  debug: true
 });
 
-function cimico(label, conf = {}) {
-  const baseDir = callsites()[1].getFileName();
-
-  if (!label) {
-    Object.assign(defLog.config, {
-      baseDir,
-    });
-    return defLog;
-  }
-
-  if (label instanceof Object) {
-    Object.assign(
-      defLog.config,
-      Object.assign(
-        {
-          baseDir,
-        },
-        label,
-      ),
-    );
-    return defLog;
-  }
-
-  const logger = new Cimico(
-    map,
-    label,
-    Object.assign(
-      {
-        baseDir,
-      },
-      defaults,
-      conf,
-    ),
-  );
-
+function proxyLogger(logger) {
   const proxy = new Proxy(logger, {
     get(target, k) {
       const key = shortHands[k] || k;
@@ -97,9 +63,47 @@ function cimico(label, conf = {}) {
       }
 
       return target[key];
-    },
+    }
   });
   return proxy;
+}
+
+function cimico(label, conf = {}) {
+  const baseDir = callsites()[1].getFileName();
+
+  if (!label) {
+    Object.assign(defLog.config, {
+      baseDir
+    });
+    return proxyLogger(defLog);
+  }
+
+  if (label instanceof Object) {
+    Object.assign(
+      defLog.config,
+      Object.assign(
+        {
+          baseDir
+        },
+        label
+      )
+    );
+    return proxyLogger(defLog);
+  }
+
+  const logger = new Cimico(
+    map,
+    label,
+    Object.assign(
+      {
+        baseDir
+      },
+      defaults,
+      conf
+    )
+  );
+
+  return proxyLogger(logger);
 }
 
 module.exports = cimico;

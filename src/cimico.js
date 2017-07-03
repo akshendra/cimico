@@ -3,7 +3,7 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-06-22 02:07:58
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-06-24 00:57:22
+ * @Last Modified time: 2017-07-03 23:55:00
  */
 
 const is = require('is_js');
@@ -20,43 +20,43 @@ pe.skipNodeFiles();
 pe.appendStyle({
   'pretty-error > trace': {
     display: 'block',
-    marginTop: 0,
+    marginTop: 0
   },
   'pretty-error > header': {
-    color: 'bright-red',
+    color: 'bright-red'
   },
   'pretty-error > header > title > kind': {
     color: 'bright-red',
-    background: 'none',
+    background: 'none'
   },
   'pretty-error > header > colon': {
-    color: 'bright-red',
+    color: 'bright-red'
   },
   'pretty-error > header > message': {
     color: 'bright-red',
-    padding: '0 0', // top/bottom left/right
+    padding: '0 0' // top/bottom left/right
   },
   'pretty-error > trace > item': {
     color: 'bright-red',
     marginTop: 0,
     margin: '0 2',
-    bullet: '"<grey>-</grey>"',
+    bullet: '"<grey>-</grey>"'
   },
   'pretty-error > trace > item > header > pointer > file': {
-    color: 'bright-cyan',
+    color: 'bright-cyan'
   },
   'pretty-error > trace > item > header > pointer > colon': {
-    color: 'cyan',
+    color: 'cyan'
   },
   'pretty-error > trace > item > header > pointer > line': {
-    color: 'bright-cyan',
+    color: 'bright-cyan'
   },
   'pretty-error > trace > item > header > what': {
-    color: 'bright-white',
+    color: 'bright-white'
   },
   'pretty-error > trace > item > footer > addr': {
-    color: 'grey',
-  },
+    color: 'grey'
+  }
 });
 
 const utils = require('./utils');
@@ -68,7 +68,7 @@ class Cimico {
       log: utils.checkEnabled(map, `${label}:log`),
       success: utils.checkEnabled(map, `${label}:success`),
       error: utils.checkEnabled(map, `${label}:error`),
-      debug: utils.checkEnabled(map, `${label}:debug`),
+      debug: utils.checkEnabled(map, `${label}:debug`)
     };
     this.config = config;
     this.current = {};
@@ -80,7 +80,7 @@ class Cimico {
 
   setFlag(flag) {
     Object.assign(this.current, {
-      [flag]: true,
+      [flag]: true
     });
   }
 
@@ -98,7 +98,7 @@ class Cimico {
     }
     return {
       rest: args.slice(i),
-      combined: strings.join(' '),
+      combined: strings.join(' ')
     };
   }
 
@@ -145,7 +145,7 @@ class Cimico {
 
     return {
       combined: formatString,
-      rest: prints,
+      rest: prints
     };
   }
 
@@ -171,7 +171,7 @@ class Cimico {
     rest.forEach((frag, index) => {
       if (is.string(frag) || is.boolean(frag) || is.number(frag)) {
         stream.write(
-          chalk.white(` ${chalk.dim(figures.squareSmall)}  ${frag}\n`),
+          chalk.white(` ${chalk.dim(figures.squareSmall)}  ${frag}\n`)
         );
         this.cleanup();
         return;
@@ -188,7 +188,7 @@ class Cimico {
       if (is.error(frag)) {
         if (this.current.pretty === true) {
           stream.write(
-            ` ${figures.squareSmall}${pe.render(frag, false, this.current.color)}`,
+            ` ${figures.squareSmall}${pe.render(frag, false, this.current.color)}`
           );
         } else {
           stream.write(` ${figures.squareSmall}  ${frag.stack}\n`);
@@ -200,12 +200,12 @@ class Cimico {
       if (this.current.pretty === true) {
         stream.write(inspectString);
         stream.write(
-          `${pj.render(frag, { noColor: !this.current.color }, 2)}\n`,
+          `${pj.render(frag, { noColor: !this.current.color }, 2)}\n`
         );
       } else {
         stream.write(inspectString);
         const formatted = util
-          .inspect(frag, false, 2, this.current.color)
+          .inspect(frag, false, 10, this.current.color)
           .split('\n')
           .map(s => `  ${s}`)
           .join('\n');
