@@ -3,7 +3,7 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-06-22 05:30:00
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-07-03 23:53:27
+ * @Last Modified time: 2017-07-06 16:53:50
  */
 
 const callsites = require('callsites');
@@ -68,6 +68,8 @@ function proxyLogger(logger) {
   return proxy;
 }
 
+const loggers = {};
+
 function cimico(label, conf = {}) {
   const baseDir = callsites()[1].getFileName();
 
@@ -81,8 +83,7 @@ function cimico(label, conf = {}) {
   if (label instanceof Object) {
     Object.assign(
       defLog.config,
-      Object.assign(
-        {
+      Object.assign({
           baseDir
         },
         label
@@ -91,19 +92,26 @@ function cimico(label, conf = {}) {
     return proxyLogger(defLog);
   }
 
+  if (loggers[label]) {
+    const logger = loggers[label];
+    if (conf) {
+      logger.config = conf;
+    }
+    return logger;
+  }
+
   const logger = new Cimico(
     map,
     label,
-    Object.assign(
-      {
+    Object.assign({
         baseDir
       },
       defaults,
       conf
     )
   );
-
-  return proxyLogger(logger);
+  loggers[label] = proxyLogger(logger);
+  return loggers[label];
 }
 
 module.exports = cimico;
