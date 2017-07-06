@@ -1,74 +1,27 @@
-/* Logger module
+/**
+ * Logger module
  *
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-06-22 02:07:58
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-07-03 23:55:00
+ * @Last Modified time: 2017-07-06 23:17:19
  */
 
-const is = require('is_js');
-const util = require('util');
-const chalk = require('chalk');
-const figures = require('figures');
 const callsites = require('callsites');
-const PrettyError = require('pretty-error');
-const pj = require('prettyjson');
 
-const pe = new PrettyError();
-
-pe.skipNodeFiles();
-pe.appendStyle({
-  'pretty-error > trace': {
-    display: 'block',
-    marginTop: 0
-  },
-  'pretty-error > header': {
-    color: 'bright-red'
-  },
-  'pretty-error > header > title > kind': {
-    color: 'bright-red',
-    background: 'none'
-  },
-  'pretty-error > header > colon': {
-    color: 'bright-red'
-  },
-  'pretty-error > header > message': {
-    color: 'bright-red',
-    padding: '0 0' // top/bottom left/right
-  },
-  'pretty-error > trace > item': {
-    color: 'bright-red',
-    marginTop: 0,
-    margin: '0 2',
-    bullet: '"<grey>-</grey>"'
-  },
-  'pretty-error > trace > item > header > pointer > file': {
-    color: 'bright-cyan'
-  },
-  'pretty-error > trace > item > header > pointer > colon': {
-    color: 'cyan'
-  },
-  'pretty-error > trace > item > header > pointer > line': {
-    color: 'bright-cyan'
-  },
-  'pretty-error > trace > item > header > what': {
-    color: 'bright-white'
-  },
-  'pretty-error > trace > item > footer > addr': {
-    color: 'grey'
-  }
-});
-
-const utils = require('./utils');
+const levels = require('./levels');
+const printer = require('./print');
 
 class Cimico {
   constructor(map, label, config = {}) {
     this.label = label;
-    this.enabled = {
-      log: utils.checkEnabled(map, `${label}:log`),
-      success: utils.checkEnabled(map, `${label}:success`),
-      error: utils.checkEnabled(map, `${label}:error`),
-      debug: utils.checkEnabled(map, `${label}:debug`)
+    this.levels = {
+      log: levels.log(label, map),
+      info: levels.info(label, map),
+      success: levels.success(label, map),
+      debug: levels.debug(label, map),
+      warn: levels.warn(label, map),
+      error: levels.error(label, map),
     };
     this.config = config;
     this.current = {};
@@ -76,183 +29,90 @@ class Cimico {
 
   cleanup() {
     this.current = {};
+    return this;
   }
 
-  setFlag(flag) {
-    Object.assign(this.current, {
-      [flag]: true
+  setConfig(flag, value) {
+    this.current = Object.assign(this.current, {
+      [flag]: value
     });
+    return this;
   }
 
-  // eslint-disable-next-line
-  combineStrings(args) {
-    const strings = [];
-    let i = 0;
-    for (i = 0; i < args.length; i += 1) {
-      const arg = args[i];
-      if (is.string(arg) || is.boolean(arg) || is.number(arg)) {
-        strings.push(arg);
-      } else {
-        break;
-      }
-    }
-    return {
-      rest: args.slice(i),
-      combined: strings.join(' ')
-    };
+  pretty(value = 'all') {
+    return this.setConfig('pretty', value);
   }
 
-  // eslint-disable-next-line
-  formatter(args) {
-    const prints = [];
-
-    let formatString = args.shift();
-
-    const re = /%([dbu]*(\(.*?\))?)/g;
-    const matches = formatString.match(re);
-    matches.forEach((match, index) => {
-      const compiled = utils.inspectFormat(match);
-      let formater = chalk.white;
-      compiled.formatters.forEach((f) => {
-        switch (f) {
-          case 'd':
-            formater = formater.dim;
-            break;
-          case 'b':
-            formater = formater.bold;
-            break;
-          case 'u':
-            formater = formater.underline;
-            break;
-          default:
-            throw new Error(`Unsupported formatter ${f}`);
-        }
-      });
-
-      let replaceString = '';
-      const value = args[index];
-      if (is.string(value) || is.boolean(value) || is.number(value)) {
-        replaceString = formater(value);
-      } else {
-        replaceString = chalk.dim(`__${index + 1}__`);
-        prints.push(value);
-      }
-      if (compiled.key) {
-        replaceString = `${compiled.key}=${replaceString}`;
-      }
-      formatString = formatString.replace(match, replaceString);
-    });
-
-    return {
-      combined: formatString,
-      rest: prints
-    };
+  p(value = 'all') {
+    return this.setConfig('pretty', value);
   }
 
-  getHeader(figure, cs) {
-    let string = `${chalk.underline(this.label)} ${figure}`;
-    if (this.current.timestamp === true) {
-      string += ` ${chalk.dim.underline(utils.getTimeStamp())} :`;
-    }
-    if (this.current.filename === true) {
-      string += ` ${chalk.dim.underline(utils.getCallInfo(cs, this.current.baseDir))} :`;
-    }
-
-    return `${string}`;
+  colors(value = true) {
+    return this.setConfig('colors', value);
   }
 
-  print(header, combined, rest, stream, formater) {
-    if (this.current.color === true) {
-      stream.write(formater(`${header} ${combined}\n`));
-    } else {
-      stream.write(`${header} ${combined}\n`);
-    }
-
-    rest.forEach((frag, index) => {
-      if (is.string(frag) || is.boolean(frag) || is.number(frag)) {
-        stream.write(
-          chalk.white(` ${chalk.dim(figures.squareSmall)}  ${frag}\n`)
-        );
-        this.cleanup();
-        return;
-      }
-
-      let name = '';
-      if (this.current.format === true) {
-        name = chalk.dim(`__${index + 1}__`);
-      } else {
-        name = chalk.dim('__inspect__');
-      }
-      const inspectString = ` ${chalk.dim(figures.squareSmall)} ${name}\n`;
-
-      if (is.error(frag)) {
-        if (this.current.pretty === true) {
-          stream.write(
-            ` ${figures.squareSmall}${pe.render(frag, false, this.current.color)}`
-          );
-        } else {
-          stream.write(` ${figures.squareSmall}  ${frag.stack}\n`);
-        }
-        this.cleanup();
-        return;
-      }
-
-      if (this.current.pretty === true) {
-        stream.write(inspectString);
-        stream.write(
-          `${pj.render(frag, { noColor: !this.current.color }, 2)}\n`
-        );
-      } else {
-        stream.write(inspectString);
-        const formatted = util
-          .inspect(frag, false, 10, this.current.color)
-          .split('\n')
-          .map(s => `  ${s}`)
-          .join('\n');
-        stream.write(`${formatted}\n`);
-      }
-    });
+  c(value = true) {
+    return this.setConfig('colors', value);
   }
 
-  internal(fragments, stream, formater, figure) {
-    this.current = Object.assign({}, this.config, this.current);
-    const { format } = this.current;
-    const cs = callsites()[2];
+  timestamp(value = true) {
+    return this.setConfig('timestamp', value);
+  }
 
-    const header = this.getHeader(figure, cs);
+  ts(value = true) {
+    return this.setConfig('timestamp', value);
+  }
 
-    if (format === false) {
-      const { combined, rest } = this.combineStrings(fragments);
-      this.print(header, combined, rest, stream, formater, figure);
-    } else {
-      const { combined, rest } = this.formatter(fragments);
-      this.print(header, combined, rest, stream, formater, figure);
-    }
+  filename(value = true) {
+    return this.setConfig('filename', value);
+  }
+
+  fn(value = true) {
+    return this.setConfig('filename', value);
+  }
+
+  method(value = true) {
+    return this.setConfig('method', value);
+  }
+
+  md(value = true) {
+    return this.setConfig('method', value);
+  }
+
+  getLevel(level) {
+    return this.levels[level];
+  }
+
+  print(level, args) {
+    printer(this.levels[level], args, callsites()[2], Object.assign({
+      label: this.label,
+    }, this.config, this.current));
     this.cleanup();
+    return this;
   }
 
   log(...args) {
-    if (this.enabled.log) {
-      this.internal(args, process.stdout, chalk.blue, figures.pointerSmall);
-    }
+    return this.print('log', args);
+  }
+
+  info(...args) {
+    return this.print('info', args);
   }
 
   success(...args) {
-    if (this.enabled.success) {
-      this.internal(args, process.stdout, chalk.green, figures.tick);
-    }
+    return this.print('success', args);
   }
 
-  error(...args) {
-    if (this.enabled.error) {
-      this.internal(args, process.stderr, chalk.red.bold, figures.cross);
-    }
+  warn(...args) {
+    return this.print('warn', args);
   }
 
   debug(...args) {
-    if (this.enabled.debug) {
-      this.internal(args, process.stderr, chalk.grey, figures.bullet);
-    }
+    return this.print('debug', args);
+  }
+
+  error(...args) {
+    return this.print('error', args);
   }
 }
 

@@ -23,6 +23,7 @@
     "valid-typeof": "warn",
     "import/no-extraneous-dependencies": 0,
     "no-unused-expressions": 0,
-    "comma-dangle": 0
+    "comma-dangle": 0,
+    "indent": 0
   }
 }
