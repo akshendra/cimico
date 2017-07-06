@@ -2,7 +2,7 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-07-06 18:57:12
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-07-07 00:13:55
+ * @Last Modified time: 2017-07-07 00:50:32
  */
 
 const is = require('is_js');
@@ -221,27 +221,64 @@ function divider() {
   return chalk.dim(` ${figures.pointerSmall} `);
 }
 
-function indent(string, indentation = '   ') {
-  return string.split('\n').map(s => `${indentation}${s}`).join('\n');
+function indent(string, notFirst = false, indentation = '   ') {
+  return string.split('\n').map((s, index) => {
+    if (index === 0 && notFirst === true) {
+      return s;
+    }
+    return `${indentation}${s}`;
+  }).join('\n');
 }
 
-function expandError(err, config, oneDone) {
+function expandError(err, config, oneDone = false) {
   const {
     pretty,
     colors,
   } = config;
 
   if (pretty === 'all' || pretty.indexOf('errors') !== -1) {
+    const str = `${pe.render(err, false, colors).replace(/\u001b\[0m\n\u001b\[0m$/, '')}`;
     if (oneDone) {
-      return `\n${pe.render(err, false, colors).replace(/\u001b\[0m\n\u001b\[0m$/, '')}`;
+      return `\n${str}`;
     }
-    return `${pe.render(err, false, colors).replace(/\u001b\[0m\n\u001b\[0m$/, '')}`;
+    return str;
   }
 
+  const str = indent(err.stack, !oneDone);
   if (oneDone) {
-    return `\n${indent(err.stack)}`;
+    return `\n${str}`;
   }
-  return `\n${indent(err.stack)}`;
+  return str;
+}
+
+function expandObjArr(value, config, oneDone) {
+  const {
+    pretty,
+    colors
+  } = config;
+
+  let name = 'Object';
+  if (is.array(value)) {
+    name = 'Array';
+  }
+
+  name = chalk.underline(name);
+
+  if (pretty === 'all' || pretty.indexOf('object') !== -1) {
+    const string = pj.render(value, {
+      noColor: !colors,
+    }, 3);
+    if (oneDone) {
+      return `\n   ${figures.pointerSmall} ${name}\n${string}`;
+    }
+    return `${name}\n${string}`;
+  }
+
+  const string = indent(util.inspect(value, false, 5, !colors), !oneDone);
+  if (oneDone) {
+    return `\n   ${figures.pointerSmall} ${name}\n${string}`;
+  }
+  return `${name}\n${string}`;
 }
 
 function expandArgs(args, config) {
@@ -253,7 +290,7 @@ function expandArgs(args, config) {
       if (first) {
         string += `${arg} `;
       } else {
-        string += `\n  ${divider()} ${arg}`;
+        string += `\n   ${figures.pointerSmall} ${arg}`;
       }
       oneDone = true;
     } else if (arg instanceof Error) {
@@ -261,7 +298,7 @@ function expandArgs(args, config) {
       first = false;
       oneDone = true;
     } else if (is.object(arg) || is.array(arg)) {
-      string += JSON.stringify(arg);
+      string += expandObjArr(arg, config, oneDone);
       first = false;
       oneDone = true;
     }
@@ -302,7 +339,6 @@ function colorIt(string, color, config) {
 
 function print(level, args, cs, config) {
   const {
-    name,
     enabled,
     mark,
     color,
@@ -317,7 +353,7 @@ function print(level, args, cs, config) {
     return;
   }
 
-  const front = ` ${mark} ${label}`;
+  const front = `${mark} ${label}`;
   const header = getHeader(cs, config);
   const body = expandArgs(args, config);
 

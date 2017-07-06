@@ -14,17 +14,9 @@ logger.ts().error(
   'This is supposed to be an error',
   new Error('Yes this an error')
 );
-logger.ts().fn().success('This is success with object', {
-  var: 'data',
-  arr: [1, 2, 3, 4]
-});
+logger.ts().fn().success('This is success with object', process.argv);
 
-logger.debug({
-    var: 'data',
-    arr: [1, 2, 3, 4]
-  },
-  'what is there is another string'
-);
+logger.p().debug(process.argv, 'what is there is another string', process.config, 'And here we go again', null);
 
 logger.p().warn('You have been warned', new Error('It is a warnign but still'));
 logger.p().colors(false).error(new Error('No color, I want to cry'));
