@@ -46,28 +46,17 @@ appLogger.p().debug(process.argv, 'what is there is another string', testObj, 'A
 appLogger.p().warn('You have been warned', new Error('It is a warnign but still'));
 appLogger.p().colors(false).error(new Error('No color, I want to cry'));
 
-// Logger.f.l(
-//   'This is bold=%b and this is underline=%u and this is both %bu',
-//   'bold',
-//   'underline',
-//   'everything'
-// );
-// logger.f.c.s(
-//   '%(object) and %(array)',
-//   {
-//     var: 'data',
-//     arr: [1, 2, 3, 4]
-//   },
-//   ['what', 'do', 'you', 'mean']
-// );
+logger.log(
+  'This is bold=%b and this is underline=%u and this is both %bu',
+  'bold',
+  'underline',
+  'everything'
+);
 
-// logger.f.p.ts.fn.e(
-//   '%(object) and %(array)',
-//   {
-//     var: 'data',
-//     arr: [1, 2, 3, 4]
-//   },
-//   ['what', 'do', 'you', 'mean']
-// );
+logger.colors(true).log('%b and %u', testObj, ['what', 'do', 'you', 'mean']);
 
-// defLogger.log('This is just too much');
+logger.pretty().success(
+  '%u and %b',
+  testObj,
+  ['what', 'do', 'you', 'mean']
+);

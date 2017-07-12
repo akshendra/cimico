@@ -2,7 +2,7 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-07-06 18:57:12
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-07-13 02:24:07
+ * @Last Modified time: 2017-07-13 02:48:17
  */
 
 const util = require('util');
@@ -102,12 +102,13 @@ function expandObjArr(value, config, labelPad, oneDone = false) {
     colors,
   } = config;
 
-  let name = 'Object';
+  const count = value.count ? `<${value.count}>` : '';
+  let name = `Object ${count}`;
   if (is.array(value)) {
-    name = 'Array';
+    name = `Array ${count}`;
   }
 
-  name = chalk.underline(name);
+  name = chalk.underline.dim(name);
 
   if (pretty === 'all' || pretty.indexOf('object') !== -1) {
     const string = pj.render(value, {
@@ -133,13 +134,13 @@ function applyFormat(string, fstring) {
   fstring.split('').forEach(frmt => {
     switch (frmt) {
       case 'b':
-        formatter += formatter.bold;
+        formatter = formatter.bold;
         break;
       case 'u':
-        formatter += formatter.underline;
+        formatter = formatter.underline;
         break;
       case 'd':
-        formatter += formatter.dim;
+        formatter = formatter.dim;
         break;
       default:
         break;
@@ -156,31 +157,28 @@ function expandArgs(args, config, labelpad) {
 
   if (isFormatString(args[0])) {
     const formatString = args[0];
-    const splits = splitAtFormatters(formatString);
     const formatters = extractFormatters(formatString);
     const rest = args.slice(1);
-    const start = [];
     const end = [];
 
     let fnum = 1;
-    splits.forEach((split, index) => {
-      start.push(split);
+    let startString = formatString;
+    formatters.forEach((formatter, index) => {
       const restArg = rest[index];
-      const formatter = formatters[index];
-
       if (formatter) {
         const f = formatter.substr(1);
         if (is.string(restArg) || is.number(restArg)) {
-          start.push(applyFormat(restArg), f);
+          startString = startString.replace(formatter, applyFormat(restArg, f));
         } else {
-          start.push(applyFormat(`_${fnum}_`), f);
+          startString = startString.replace(formatter, applyFormat(`_${fnum}_`, f));
+          restArg.count = fnum;
           end.push(restArg);
           fnum += 1;
         }
       }
     });
 
-    values = start.concat(end);
+    values = [startString].concat(end);
   } else {
     values = args;
   }
