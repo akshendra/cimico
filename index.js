@@ -3,7 +3,7 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-06-22 05:30:00
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-07-12 22:04:44
+ * @Last Modified time: 2017-07-12 23:56:31
  */
 
 const is = require('is_js');
@@ -13,9 +13,8 @@ const { enabled } = require('./libs/utils');
 
 const defaults = {
   colors: true,
-  pretty: true,
-  timestamp: true,
-  filename: null,
+  pretty: 'none',
+  filename: false,
 };
 
 function cimico(label, conf = {}) {

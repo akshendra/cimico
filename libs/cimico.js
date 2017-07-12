@@ -4,26 +4,23 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-06-22 02:07:58
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-07-12 22:05:44
+ * @Last Modified time: 2017-07-12 23:45:21
  */
 
 const callsites = require('callsites');
 
 const levels = require('./levels');
 const printer = require('./print');
+const { getCallInfo } = require('./utils');
 
 class Cimico {
   constructor(label, isEnabled, config = {}) {
     this.label = label;
-    this.levels = {
-      log: levels.log(label, isEnabled),
-      info: levels.info(label, isEnabled),
-      success: levels.success(label, isEnabled),
-      debug: levels.debug(label, isEnabled),
-      warn: levels.warn(label, isEnabled),
-      error: levels.error(label, isEnabled),
-    };
+    this.levels = levels(label, isEnabled);
     this.config = config;
+    this.readers = {
+      callsite: getCallInfo(config.baseDir),
+    };
     this.current = {};
   }
 
@@ -55,14 +52,6 @@ class Cimico {
     return this.setConfig('colors', value);
   }
 
-  timestamp(value = true) {
-    return this.setConfig('timestamp', value);
-  }
-
-  ts(value = true) {
-    return this.setConfig('timestamp', value);
-  }
-
   filename(value = true) {
     return this.setConfig('filename', value);
   }
@@ -84,7 +73,7 @@ class Cimico {
   }
 
   print(level, args) {
-    printer(this.levels[level], args, callsites()[2], Object.assign({
+    printer(this.levels[level], args, this.readers.callsite(callsites()[2]), Object.assign({
       label: this.label,
     }, this.config, this.current));
     this.cleanup();

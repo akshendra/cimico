@@ -30,12 +30,16 @@
     "figures": "^2.0.0",
     "immutable": "^3.8.1",
     "is_js": "^0.9.0",
+    "moment": "^2.18.1",
     "pretty-error": "^2.1.1",
     "prettyjson": "^1.2.1",
     "ramda": "^0.24.1"
   },
   "xo": {
-    "env": ["node", "mocha"],
+    "env": [
+      "node",
+      "mocha"
+    ],
     "space": 2,
     "rules": {
       "no-unused-expressions": 0,

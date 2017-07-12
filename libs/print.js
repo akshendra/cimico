@@ -2,226 +2,71 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-07-06 18:57:12
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-07-07 00:50:32
+ * @Last Modified time: 2017-07-13 02:24:07
  */
 
-const is = require('is_js');
 const util = require('util');
+const is = require('is_js');
+const R = require('ramda');
 const chalk = require('chalk');
 const pj = require('prettyjson');
 const figures = require('figures');
-const callsites = require('callsites');
 const PrettyError = require('pretty-error');
 
-const utils = require('./utils');
+const { filterEmpty, isFormatString,
+  extractFormatters, splitAtFormatters } = require('./utils');
 
+const ps = figures.pointerSmall;
 const pe = new PrettyError();
-
 pe.skipNodeFiles();
 pe.appendStyle({
   'pretty-error': {
-    marginLeft: 3,
+    marginLeft: 0,
   },
   'pretty-error > trace': {
     display: 'block',
-    marginTop: 0
+    marginTop: 0,
   },
   'pretty-error > header': {
-    color: 'bright-red'
+    color: 'bright-red',
   },
   'pretty-error > header > title > kind': {
     color: 'bright-red',
-    background: 'none'
+    background: 'none',
   },
   'pretty-error > header > colon': {
-    color: 'bright-red'
+    color: 'bright-red',
   },
   'pretty-error > header > message': {
     color: 'bright-red',
-    padding: '0 1' // top/bottom left/right
+    padding: '0 1', // Top/bottom left/right
   },
   'pretty-error > trace > item': {
     color: 'bright-red',
     margin: '0 3',
-    bullet: `"<grey> ${figures.pointerSmall} </grey>"`
+    bullet: `"<grey> - </grey>"`,
   },
   'pretty-error > trace > item > header > pointer > file': {
-    color: 'bright-cyan'
+    color: 'bright-cyan',
   },
   'pretty-error > trace > item > header > pointer > colon': {
-    color: 'cyan'
+    color: 'cyan',
   },
   'pretty-error > trace > item > header > pointer > line': {
-    color: 'bright-cyan'
+    color: 'bright-cyan',
   },
   'pretty-error > trace > item > header > what': {
-    color: 'bright-white'
+    color: 'bright-white',
   },
   'pretty-error > trace > item > footer > addr': {
-    color: 'grey'
-  }
+    color: 'grey',
+  },
 });
 
-// module.exports = {
-//   combineStrings(args) {
-//     const strings = [];
-//     let i = 0;
-//     for (i = 0; i < args.length; i += 1) {
-//       const arg = args[i];
-//       if (is.string(arg) || is.boolean(arg) || is.number(arg)) {
-//         strings.push(arg);
-//       } else {
-//         break;
-//       }
-//     }
-//     return {
-//       rest: args.slice(i),
-//       combined: strings.join(' ')
-//     };
-//   },
+const divider = chalk.dim(` ${ps} `);
 
-//   // eslint-disable-next-line
-//   formatter(args) {
-//     const prints = [];
-
-//     let formatString = args.shift();
-
-//     const re = /%([dbu]*(\(.*?\))?)/g;
-//     const matches = formatString.match(re);
-//     matches.forEach((match, index) => {
-//       const compiled = utils.inspectFormat(match);
-//       let formater = chalk.white;
-//       compiled.formatters.forEach((f) => {
-//         switch (f) {
-//           case 'd':
-//             formater = formater.dim;
-//             break;
-//           case 'b':
-//             formater = formater.bold;
-//             break;
-//           case 'u':
-//             formater = formater.underline;
-//             break;
-//           default:
-//             throw new Error(`Unsupported formatter ${f}`);
-//         }
-//       });
-
-//       let replaceString = '';
-//       const value = args[index];
-//       if (is.string(value) || is.boolean(value) || is.number(value)) {
-//         replaceString = formater(value);
-//       } else {
-//         replaceString = chalk.dim(`__${index + 1}__`);
-//         prints.push(value);
-//       }
-//       if (compiled.key) {
-//         replaceString = `${compiled.key}=${replaceString}`;
-//       }
-//       formatString = formatString.replace(match, replaceString);
-//     });
-
-//     return {
-//       combined: formatString,
-//       rest: prints
-//     };
-//   },
-
-//   getHeader(figure, cs) {
-//     let string = `${chalk.underline(this.label)} ${figure}`;
-//     if (this.current.timestamp === true) {
-//       string += ` ${chalk.dim.underline(utils.getTimeStamp())} :`;
-//     }
-//     if (this.current.filename === true) {
-//       string += ` ${chalk.dim.underline(utils.getCallInfo(cs, this.current.baseDir))} :`;
-//     }
-
-//     return `${string}`;
-//   },
-
-//   print(header, combined, rest, stream, formater) {
-//     if (this.current.color === true) {
-//       stream.write(formater(`${header} ${combined}\n`));
-//     } else {
-//       stream.write(`${header} ${combined}\n`);
-//     }
-
-//     rest.forEach((frag, index) => {
-//       if (is.string(frag) || is.boolean(frag) || is.number(frag)) {
-//         stream.write(
-//           chalk.white(` ${chalk.dim(figures.squareSmall)}  ${frag}\n`)
-//         );
-//         this.cleanup();
-//         return;
-//       }
-
-//       let name = '';
-//       if (this.current.format === true) {
-//         name = chalk.dim(`__${index + 1}__`);
-//       } else {
-//         name = chalk.dim('__inspect__');
-//       }
-//       const inspectString = ` ${chalk.dim(figures.squareSmall)} ${name}\n`;
-
-//       if (is.error(frag)) {
-//         if (this.current.pretty === true) {
-//           stream.write(
-//             ` ${figures.squareSmall}${pe.render(frag, false, this.current.color)}`
-//           );
-//         } else {
-//           stream.write(` ${figures.squareSmall}  ${frag.stack}\n`);
-//         }
-//         this.cleanup();
-//         return;
-//       }
-
-//       if (this.current.pretty === true) {
-//         stream.write(inspectString);
-//         stream.write(
-//           `${pj.render(frag, { noColor: !this.current.color }, 2)}\n`
-//         );
-//       } else {
-//         stream.write(inspectString);
-//         const formatted = util
-//           .inspect(frag, false, 10, this.current.color)
-//           .split('\n')
-//           .map(s => `  ${s}`)
-//           .join('\n');
-//         stream.write(`${formatted}\n`);
-//       }
-//     });
-//   },
-
-//   internal(fragments, stream, formater, figure) {
-//     this.current = Object.assign({}, this.config, this.current);
-//     const {
-//       format
-//     } = this.current;
-//     const cs = callsites()[2];
-
-//     const header = this.getHeader(figure, cs);
-
-//     if (format === false) {
-//       const {
-//         combined,
-//         rest
-//       } = this.combineStrings(fragments);
-//       this.print(header, combined, rest, stream, formater, figure);
-//     } else {
-//       const {
-//         combined,
-//         rest
-//       } = this.formatter(fragments);
-//       this.print(header, combined, rest, stream, formater, figure);
-//     }
-//   }
-// };
-
-function divider() {
-  return chalk.dim(` ${figures.pointerSmall} `);
-}
-
-function indent(string, notFirst = false, indentation = '   ') {
+function indent(string, indentNum, notFirst = false) {
+  const indentation = R.times(() => ' ', indentNum).join('');
   return string.split('\n').map((s, index) => {
     if (index === 0 && notFirst === true) {
       return s;
@@ -230,31 +75,31 @@ function indent(string, notFirst = false, indentation = '   ') {
   }).join('\n');
 }
 
-function expandError(err, config, oneDone = false) {
+function expandError(err, config, labelPad, oneDone = false) {
   const {
     pretty,
     colors,
   } = config;
 
   if (pretty === 'all' || pretty.indexOf('errors') !== -1) {
-    const str = `${pe.render(err, false, colors).replace(/\u001b\[0m\n\u001b\[0m$/, '')}`;
+    const str = indent(`${ps} ${pe.render(err, false, colors).replace(/\u001b\[0m\n\u001b\[0m$/, '')}`, labelPad, !oneDone);
     if (oneDone) {
       return `\n${str}`;
     }
-    return str;
+    return indent(`${pe.render(err, false, colors).replace(/\u001b\[0m\n\u001b\[0m$/, '')}`, labelPad, !oneDone);
   }
 
-  const str = indent(err.stack, !oneDone);
   if (oneDone) {
+    const str = indent(`${ps} ${err.stack}`, labelPad, !oneDone);
     return `\n${str}`;
   }
-  return str;
+  return indent(err.stack, labelPad, !oneDone);
 }
 
-function expandObjArr(value, config, oneDone) {
+function expandObjArr(value, config, labelPad, oneDone = false) {
   const {
     pretty,
-    colors
+    colors,
   } = config;
 
   let name = 'Object';
@@ -267,98 +112,126 @@ function expandObjArr(value, config, oneDone) {
   if (pretty === 'all' || pretty.indexOf('object') !== -1) {
     const string = pj.render(value, {
       noColor: !colors,
-    }, 3);
+    }, oneDone ? 3 : labelPad + 1);
     if (oneDone) {
-      return `\n   ${figures.pointerSmall} ${name}\n${string}`;
+      const str = indent(`${ps} ${name}\n${string}`, labelPad, !oneDone);
+      return `\n${str}`;
     }
     return `${name}\n${string}`;
   }
 
-  const string = indent(util.inspect(value, false, 5, !colors), !oneDone);
+  const string = indent(util.inspect(value, false, 7, !colors), oneDone ? 3 : labelPad + 1, !oneDone);
   if (oneDone) {
-    return `\n   ${figures.pointerSmall} ${name}\n${string}`;
+    const str = indent(`${ps} ${name}\n${string}`, labelPad, !oneDone);
+    return `\n${str}`;
   }
   return `${name}\n${string}`;
 }
 
-function expandArgs(args, config) {
-  let string = '';
-  let first = true;
-  let oneDone = false;
-  args.forEach((arg) => {
-    if (is.string(arg) || is.number(arg)) {
-      if (first) {
-        string += `${arg} `;
-      } else {
-        string += `\n   ${figures.pointerSmall} ${arg}`;
+function applyFormat(string, fstring) {
+  let formatter = chalk;
+  fstring.split('').forEach(frmt => {
+    switch (frmt) {
+      case 'b':
+        formatter += formatter.bold;
+        break;
+      case 'u':
+        formatter += formatter.underline;
+        break;
+      case 'd':
+        formatter += formatter.dim;
+        break;
+      default:
+        break;
+    }
+  });
+  return formatter(string);
+}
+
+function expandArgs(args, config, labelpad) {
+  if (is.empty(args)) {
+    return '';
+  }
+  let values = [];
+
+  if (isFormatString(args[0])) {
+    const formatString = args[0];
+    const splits = splitAtFormatters(formatString);
+    const formatters = extractFormatters(formatString);
+    const rest = args.slice(1);
+    const start = [];
+    const end = [];
+
+    let fnum = 1;
+    splits.forEach((split, index) => {
+      start.push(split);
+      const restArg = rest[index];
+      const formatter = formatters[index];
+
+      if (formatter) {
+        const f = formatter.substr(1);
+        if (is.string(restArg) || is.number(restArg)) {
+          start.push(applyFormat(restArg), f);
+        } else {
+          start.push(applyFormat(`_${fnum}_`), f);
+          end.push(restArg);
+          fnum += 1;
+        }
       }
-      oneDone = true;
-    } else if (arg instanceof Error) {
-      string += expandError(arg, config, oneDone);
-      first = false;
-      oneDone = true;
-    } else if (is.object(arg) || is.array(arg)) {
-      string += expandObjArr(arg, config, oneDone);
-      first = false;
-      oneDone = true;
+    });
+
+    values = start.concat(end);
+  } else {
+    values = args;
+  }
+
+  let final = '';
+  let firstLine = true;
+  values.forEach((value, index) => {
+    if (is.string(value) || is.number(value)) {
+      if (firstLine) {
+        final += `${value} `;
+      } else {
+        final += '\n';
+        final += indent(`${ps} ${value}`, labelpad, false);
+      }
+    } else if (value instanceof Error) {
+      final += expandError(value, config, labelpad, index > 0);
+      firstLine = false;
+    } else if (is.object(value) || is.array(value)) {
+      final += expandObjArr(value, config, labelpad, index > 0);
+      firstLine = false;
     }
   });
 
-  return string.trim();
+  return final.trim();
 }
 
-function getHeader(cs, config) {
-  const {
-    timestamp,
-    filename,
-    baseDir,
-  } = config;
-
-  let string = '';
-
-  if (timestamp) {
-    string += `${chalk.dim.underline(utils.getTimeStamp())}${divider()}`;
-  }
-
-  if (filename) {
-    string += `${chalk.dim.underline(utils.getCallInfo(cs, baseDir))}${divider()}`;
-  }
-
-  return string;
-}
-
-function colorIt(string, color, config) {
-  const {
-    colors
-  } = config;
-  if (colors === true) {
+const colorIt = R.curry(function colorIt(enabled, color, string) {
+  if (enabled === true) {
     return color(string);
   }
   return string;
-}
+});
 
-function print(level, args, cs, config) {
-  const {
-    enabled,
-    mark,
-    color,
-    stream,
-  } = level;
-
-  const {
-    label
-  } = config;
+const print = function print(level, args, cs, config) {
+  const { enabled, mark, color, stream } = level;
+  const { label, filename, colors } = config;
 
   if (enabled === false) {
     return;
   }
 
-  const front = `${mark} ${label}`;
-  const header = getHeader(cs, config);
-  const body = expandArgs(args, config);
+  const labelPad = is.empty(label) ? label.length + 2 : label.length + 3;
 
-  const final = `${colorIt(front, color, config)}${divider()}${header}${colorIt(body, color, config)}`;
+  const colored = colorIt(colors)(color);
+  const labelstr = colored(label);
+  const csStr = cs(filename);
+  const body = colored(expandArgs(args, config, labelPad));
+  const strings = filterEmpty([labelstr, csStr, body]);
+
+  const final = `${mark} ${strings.join(divider)}`;
   stream.write(`${final.trim()}\n`);
-}
+};
 
 module.exports = print;
