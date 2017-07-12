@@ -4,7 +4,7 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-06-22 02:07:58
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-07-12 18:01:15
+ * @Last Modified time: 2017-07-12 22:05:44
  */
 
 const callsites = require('callsites');
@@ -13,15 +13,15 @@ const levels = require('./levels');
 const printer = require('./print');
 
 class Cimico {
-  constructor(map, label, config = {}) {
+  constructor(label, isEnabled, config = {}) {
     this.label = label;
     this.levels = {
-      log: levels.log(label, map),
-      info: levels.info(label, map),
-      success: levels.success(label, map),
-      debug: levels.debug(label, map),
-      warn: levels.warn(label, map),
-      error: levels.error(label, map),
+      log: levels.log(label, isEnabled),
+      info: levels.info(label, isEnabled),
+      success: levels.success(label, isEnabled),
+      debug: levels.debug(label, isEnabled),
+      warn: levels.warn(label, isEnabled),
+      error: levels.error(label, isEnabled),
     };
     this.config = config;
     this.current = {};

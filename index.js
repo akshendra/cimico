@@ -3,15 +3,13 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-06-22 05:30:00
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-07-12 18:01:52
+ * @Last Modified time: 2017-07-12 22:04:44
  */
 
 const is = require('is_js');
 
 const Cimico = require('./libs/cimico');
-const utils = require('./libs/utils');
-
-const map = utils.parseEnv(process.env.DEBUG);
+const { enabled } = require('./libs/utils');
 
 const defaults = {
   colors: true,
@@ -22,11 +20,12 @@ const defaults = {
 
 function cimico(label, conf = {}) {
   if (is.not.existy(label) || is.json(label)) {
-    return new Cimico(utils.parseEnv(''), '', Object.assign({}, defaults, label || {}));
+    const alwaysEnabled = enabled('*');
+    return new Cimico('', alwaysEnabled, Object.assign({}, defaults, label || {}));
   }
 
-  return new Cimico(map, label, Object.assign({},
-    defaults, conf));
+  const isEnabled = enabled(process.env.CIMICO);
+  return new Cimico(label, isEnabled, Object.assign({}, defaults, conf));
 }
 
 module.exports = cimico;
