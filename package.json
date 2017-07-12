@@ -10,7 +10,8 @@
     "callsites"
   ],
   "scripts": {
-    "test": "mocha tests/*.spec.js"
+    "test": "mocha tests/*.spec.js",
+    "mocha": "mocha"
   },
   "repository": {
     "type": "git",
@@ -20,12 +21,8 @@
   "license": "ISC",
   "devDependencies": {
     "chai": "^4.0.2",
-    "eslint": "^3.19.0",
-    "eslint-config-airbnb": "^15.0.1",
-    "eslint-plugin-import": "^2.3.0",
-    "eslint-plugin-jsx-a11y": "^5.0.3",
-    "eslint-plugin-react": "^7.1.0",
-    "mocha": "^3.4.2"
+    "mocha": "^3.4.2",
+    "xo": "^0.18.2"
   },
   "dependencies": {
     "callsites": "^2.0.0",
@@ -36,5 +33,32 @@
     "pretty-error": "^2.1.1",
     "prettyjson": "^1.2.1",
     "ramda": "^0.24.1"
+  },
+  "xo": {
+    "env": ["node", "mocha"],
+    "space": 2,
+    "rules": {
+      "no-unused-expressions": 0,
+      "comma-dangle": [
+        "error",
+        {
+          "arrays": "always-multiline",
+          "objects": "always-multiline",
+          "imports": "never",
+          "exports": "never",
+          "functions": "never"
+        }
+      ],
+      "func-names": 0,
+      "object-curly-spacing": 0,
+      "new-cap": 0,
+      "prefer-arrow-callback": 0,
+      "camelcase": [
+        "error",
+        {
+          "properties": "never"
+        }
+      ]
+    }
   }
 }

@@ -4,7 +4,7 @@
  * @Author: Akshendra Pratap Singh
  * @Date: 2017-06-22 02:07:58
  * @Last Modified by: Akshendra Pratap Singh
- * @Last Modified time: 2017-07-06 23:17:19
+ * @Last Modified time: 2017-07-12 18:01:15
  */
 
 const callsites = require('callsites');
@@ -34,7 +34,7 @@ class Cimico {
 
   setConfig(flag, value) {
     this.current = Object.assign(this.current, {
-      [flag]: value
+      [flag]: value,
     });
     return this;
   }

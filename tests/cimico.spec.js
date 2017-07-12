@@ -10,18 +10,14 @@ const logger = cimico('app', {
 
 logger.fn().log('Wake up in the mornign', 'and it raise');
 logger.fn().info('A little information', 'and it raise');
-logger.ts().error(
-  'This is supposed to be an error',
-  new Error('Yes this an error')
-);
+logger.ts().error('This is supposed to be an error', new Error('Yes this an error'));
 logger.ts().fn().success('This is success with object', process.argv);
 
 logger.p().debug(process.argv, 'what is there is another string', process.config, 'And here we go again', null);
 
 logger.p().warn('You have been warned', new Error('It is a warnign but still'));
 logger.p().colors(false).error(new Error('No color, I want to cry'));
-
-// logger.f.l(
+// Logger.f.l(
 //   'This is bold=%b and this is underline=%u and this is both %bu',
 //   'bold',
 //   'underline',
