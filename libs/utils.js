@@ -5,6 +5,12 @@
  * @Last Modified time: 2017-07-13 11:56:17
  */
 
+/* ----------------------------
+
+  Crowdbotics
+
+ -------------------------------- */
+
 const path = require('path');
 const is = require('is_js');
 const R = require('ramda');
@@ -68,83 +74,3 @@ module.exports = {
   filterEmpty,
   mixConf,
 };
-
-// /**
-//  * Divide the string into name spaces
-//  * Also filter out empty strings
-//  *
-//  * @param {string} string
-//  * @returns {Array(string)}
-//  */
-// function namespaces(string) {
-//   return string.split(/[\s,]/).filter();
-// }
-
-// module.exports = {
-//   /**
-//    * Prase the env string and create a lookup map
-//    *
-//    * @param {string} string
-//    * @returns {object}
-//    */
-//   parseEnv(string) {
-//     const regexps = {
-//       enabled: [],
-//       disabled: [],
-//     };
-
-//     const namespaces = string.split([]);
-//   },
-
-//   /**
-//    * Check if a log label is enabled
-//    *
-//    * @param {Object} map
-//    * @param {string} label
-//    *
-//    * @returns {bool}
-//    */
-//   checkEnabled(map, label) {
-//     return lookInMap(map, label.split(':'));
-//   },
-
-//   /**
-//    * Return a string representation of the call info
-//    *
-//    * @param {Object} cs
-//    * @param {string} base - the base directory to print filename relative to
-//    *
-//    * @returns {string}
-//    */
-  // getCallInfo(cs, base) {
-  //   let filename = cs.getFileName() || cs.getMethodName();
-  //   if (base) {
-  //     filename = path.relative(base, filename);
-  //   }
-  //   return `${filename}[${cs.getFunctionName()}]:${cs.getLineNumber()}`;
-  // },
-
-//   /**
-//    * Reutrn ISO string of current time
-//    *
-//    * @returns {string}
-//    */
-//   getTimeStamp() {
-//     return new Date().toISOString();
-//   },
-
-//   /**
-//    * Inspect format string
-//    *
-//    * @return {object}
-//    */
-//   inspectFormat(string) {
-//     const re = /%([budsi]*)(\((.*)\))?/;
-//     const match = string.match(re);
-
-//     return {
-//       formatters: match[1] ? match[1].split('') : [],
-//       key: match[3] ? match[3] : null,
-//     };
-//   },
-// };
